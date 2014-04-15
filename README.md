@@ -19,7 +19,7 @@ INSTALL
 =======
 0. install Perl module 'NET::Cidr'
 
-        % cpan -e 'install Net::CIDR'
+        % perl -MCPAN -e 'install Net::CIDR'
 
 1. make
 
