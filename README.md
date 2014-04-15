@@ -2,14 +2,17 @@ SUMMARY
 =======
 CCTLD - cctld tools is creating IP addresses table with Country Code
 
-	makecctld.pl
-		build Country Code list from iana.org.
+###bin/makecctld.pl
+	create Country Code list from iana.org.
 
-	makeiplist.pl
-		build IP addresses table with country code from *nic delegate files.
+###bin/makeiplist.pl
+	create IP addresses table with country code from *nic delegate files.
 
-	cctld
-		reads stdin and replace IP addresses with country code.
+###bin/makebycountry.pl
+	create IP addresses table by country code.
+
+###bin/cctld
+	reads stdin and replace IP addresses with country code.
 
 
 INSTALL
