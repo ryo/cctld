@@ -1,0 +1,86 @@
+SUMMARY
+=======
+CCTLD - cctld tools is creating IP addresses table with Country Code
+
+	makecctld.pl
+		build Country Code list from iana.org.
+
+	makeiplist.pl
+		build IP addresses table with country code from *nic delegate files.
+
+	cctld
+		reads stdin and replace IP addresses with country code.
+
+
+INSTALL
+=======
+1. make
+
+	% make
+	wget -q -O - http://www.iana.org/domains/root/db/ | perl makecctld.pl > cctld.txt || rm -f cctld.txt
+	wget -q -O - http://ftp.apnic.net/stats/apnic/delegated-apnic-latest > delegated-apnic-latest || rm -f delegated-apnic-latest
+	wget -q -O - http://ftp.apnic.net/stats/arin/delegated-arin-latest > delegated-arin-latest || rm -f delegated-arin-latest
+	wget -q -O - http://ftp.apnic.net/stats/ripe-ncc/delegated-ripencc-latest > delegated-ripencc-latest || rm -f delegated-ripencc-latest
+	wget -q -O - http://ftp.apnic.net/stats/lacnic/delegated-lacnic-latest > delegated-lacnic-latest || rm -f delegated-lacnic-latest
+	wget -q -O - http://ftp.apnic.net/stats/afrinic/delegated-afrinic-latest > delegated-afrinic-latest || rm -f delegated-afrinic-latest
+	perl makeiplist.pl -4 -C cctld.txt delegated-apnic-latest delegated-arin-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.txt || rm -f ip4.txt
+	perl makeiplist.pl -4 -c  -C cctld.txt delegated-apnic-latest delegated-arin-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.cidr.txt || rm -f ip4.cidr.txt
+	perl makeiplist.pl -6 -C cctld.txt delegated-apnic-latest delegated-arin-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.txt || rm -f ip6.txt
+	perl makeiplist.pl -6 -c  -C cctld.txt delegated-apnic-latest delegated-arin-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.cidr.txt || rm -f ip6.cidr.txt
+
+2. confirm
+
+    % head ip4.cidr.txt 
+    1.0.0.0/24	AU	Australia
+    1.0.1.0/24	CN	China
+    1.0.2.0/23	CN	China
+    1.0.4.0/22	AU	Australia
+    1.0.8.0/21	CN	China
+    1.0.16.0/20	JP	Japan
+    1.0.32.0/19	CN	China
+    1.0.64.0/18	JP	Japan
+    1.0.128.0/17	TH	Thailand
+    1.1.0.0/24	CN	China
+    
+    % head ip6.cidr.txt
+    2001:200::/32	JP	Japan
+    2001:208::/32	SG	Singapore
+    2001:218::/32	JP	Japan
+    2001:220::/32	KR	Korea, Republic of
+    2001:230::/32	KR	Korea, Republic of
+    2001:238::/32	TW	Taiwan, Province of China
+    2001:240::/32	JP	Japan
+    2001:250::/31	CN	China
+    2001:252::/32	CN	China
+    2001:254::/32	CN	China
+
+3. copy cctld to your $PATH
+
+4. copy cctld.ip4 and cctld.txt to LIBRARY-PATH
+
+        /usr/local/lib  or
+        ~/lib           or
+        CCTLDLIB environment variable
+
+	e.g.) cp cctld.ip4 /usr/local/lib
+
+
+HOW TO USE
+----------
+	% echo 219.94.233.133 | cctld
+	219.94.233.133(JP)
+	
+	% cctld -l /var/log/httpd/access_log
+	219.94.233.133(Japan) - - [13/Feb/2004:17:51:27 +0900] ...
+	219.94.233.133(Japan) - - [13/Feb/2004:17:51:27 +0900] ...
+	219.94.233.133(Japan) - - [13/Feb/2004:17:51:27 +0900] ...
+	        :
+
+Reference
+---------
+	http://www.iana.org/domains/root/db/
+	http://www.apnic.net/
+	http://www.arin.net/
+	http://www.ripe.net/
+	http://lacnic.net/
+	http://afrinic.net/

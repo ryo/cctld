@@ -1,0 +1,112 @@
+#!/usr/local/bin/perl
+#
+# cctld - reverse lookup country code of IP address
+#
+# Copyright (C) 2004 Ryo Shimizu <ryo@nerv.org>
+# All rights reserved.
+#
+# $Id: cctld,v 1.19 2014/04/15 09:00:03 ryo Exp $
+#
+use warnings;
+use strict;
+use Getopt::Std;
+use Data::Dumper;
+
+sub usage {
+	die <<__USAGE__;
+usage: cctld [options]
+	-x	address extract mode
+
+	-l	long format
+	-d	extend format
+__USAGE__
+}
+
+
+my %opts;
+getopts('dlx', \%opts) or usage();
+
+($_ = $0) =~ s|/[^/]*$||;
+my @tablepath = (
+	"/usr/local/lib",
+	$ENV{HOME} . "/lib",
+	$_,
+);
+
+push(@tablepath, $ENV{CCTLDLIB}) if (exists $ENV{CCTLDLIB});
+my ($CCTLDLIB) = grep(-f "$_/ip4.txt", @tablepath);
+my @ip;
+
+my $file = "$CCTLDLIB/ip4.txt";
+open(my $fh, $file) or die "open: $file: $!\n";
+while (<$fh>) {
+	chop;
+	my ($start, $end, $cc, $country) = split(/\t/, $_, 4);
+	my $st = ip4_n($start);
+	my $ed = ip4_n($end);
+	push(@ip, [$st, $ed, $cc, $country]);
+}
+close($fh);
+
+
+my $RE_IP = qr/(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)/;
+
+$| = 1 if -t STDOUT;
+while (<>) {
+	if ($opts{e}) {
+		$_ = join("\n", m/($RE_IP)/g) . "\n";
+	}
+
+	s/($RE_IP)/ip2cc($1)/eg;
+	print;
+}
+
+sub ip2cc {
+	my $ip = shift;
+	my $i;
+	my $result;
+
+	my $n = ip4_n($ip);
+	$i = bsearch(0, $#ip, $n);
+
+	if ((${$ip[$i]}[0] <= $n) && ($n <= ${$ip[$i]}[1])) {
+		if ($opts{d}) {
+			$result = sprintf "%s(%s,%s)", $ip, ${$ip[$i]}[2], ${$ip[$i]}[3];
+		} elsif ($opts{l}) {
+			$result = sprintf "%s(%s)", $ip, ${$ip[$i]}[3];
+		} else {
+			$result = sprintf "%s(%s)", $ip, ${$ip[$i]}[2];
+		}
+
+	} else {
+		$result = $ip;
+	}
+
+	$result;
+}
+
+
+sub bsearch {
+	my ($st, $ed, $ip) = @_;
+	my $av = int(($st + $ed) / 2);
+
+	if (($ed - $st) <= 1) {
+		return $st;
+	}
+
+	if ($ip < ${$ip[$av]}[0]) {
+		return bsearch($st, $av, $ip);
+	} else {
+		return bsearch($av, $ed, $ip);
+	}
+}
+
+sub ip4_n {
+	my $ip = shift;
+	unpack("N", pack("CCCC", split(/\./, $ip, 4)));
+}
+
+sub n_ip4 {
+	my $n = shift;
+	sprintf("%d.%d.%d.%d", unpack("CCCC", pack("N", $n)));
+}
