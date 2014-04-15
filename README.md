@@ -17,21 +17,25 @@ reads stdin and replace IP addresses with country code.
 
 INSTALL
 =======
+0. install Perl module 'NET::Cidr'
+
+        % cpan -e 'install Net::CIDR'
+
 1. make
 
         % make
-        wget -q -O - http://www.iana.org/domains/root/db/ | /usr/local/bin/perl bin/makecctld.pl > cctld.txt || rm -f cctld.txt
+        wget -q -O - http://www.iana.org/domains/root/db/ | perl bin/makecctld.pl > cctld.txt || rm -f cctld.txt
         wget -q -O - http://ftp.apnic.net/stats/apnic/delegated-apnic-latest > delegated-apnic-latest || rm -f delegated-apnic-latest
         wget -q -O - http://ftp.apnic.net/stats/arin/delegated-arin-extended-latest > delegated-arin-extended-latest || rm -f delegated-arin-extended-latest
         wget -q -O - http://ftp.apnic.net/stats/ripe-ncc/delegated-ripencc-latest > delegated-ripencc-latest || rm -f delegated-ripencc-latest
         wget -q -O - http://ftp.apnic.net/stats/lacnic/delegated-lacnic-latest > delegated-lacnic-latest || rm -f delegated-lacnic-latest
         wget -q -O - http://ftp.apnic.net/stats/afrinic/delegated-afrinic-latest > delegated-afrinic-latest || rm -f delegated-afrinic-latest
-        /usr/local/bin/perl bin/makeiplist.pl -4 -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.txt || rm -f ip4.txt
-        /usr/local/bin/perl bin/makeiplist.pl -4 -c  -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.cidr.txt || rm -f ip4.cidr.txt
-        /usr/local/bin/perl bin/makeiplist.pl -6 -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.txt || rm -f ip6.txt
-        /usr/local/bin/perl bin/makeiplist.pl -6 -c  -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.cidr.txt || rm -f ip6.cidr.txt
-        /usr/local/bin/perl bin/makebycountry.pl cc/ .ip4 ip4.cidr.txt
-        /usr/local/bin/perl bin/makebycountry.pl cc/ .ip6 ip6.cidr.txt
+        perl bin/makeiplist.pl -4 -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.txt || rm -f ip4.txt
+        perl bin/makeiplist.pl -4 -c  -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.cidr.txt || rm -f ip4.cidr.txt
+        perl bin/makeiplist.pl -6 -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.txt || rm -f ip6.txt
+        perl bin/makeiplist.pl -6 -c  -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.cidr.txt || rm -f ip6.cidr.txt
+        perl bin/makebycountry.pl cc/ .ip4 ip4.cidr.txt
+        perl bin/makebycountry.pl cc/ .ip6 ip6.cidr.txt
 
 2. confirm
 

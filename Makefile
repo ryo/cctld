@@ -24,7 +24,7 @@ AFRINIC		= delegated-afrinic-latest
 DELEGATEFILE	= $(APNIC) $(ARIN) $(RIPE) $(LACNIC) $(AFRINIC)
 HTTPGET 	= wget -q -O -
 #HTTPGET 	= curl -s -o -
-PERL		= /usr/local/bin/perl
+PERL		= perl
 LIST		= ip4.txt ip4.cidr.txt ip6.txt ip6.cidr.txt
 
 all: $(LIST) bycountry
