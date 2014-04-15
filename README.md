@@ -20,16 +20,18 @@ INSTALL
 1. make
 
         % make
-        wget -q -O - http://www.iana.org/domains/root/db/ | perl makecctld.pl > cctld.txt || rm -f cctld.txt
+        wget -q -O - http://www.iana.org/domains/root/db/ | /usr/local/bin/perl bin/makecctld.pl > cctld.txt || rm -f cctld.txt
         wget -q -O - http://ftp.apnic.net/stats/apnic/delegated-apnic-latest > delegated-apnic-latest || rm -f delegated-apnic-latest
-        wget -q -O - http://ftp.apnic.net/stats/arin/delegated-arin-latest > delegated-arin-latest || rm -f delegated-arin-latest
+        wget -q -O - http://ftp.apnic.net/stats/arin/delegated-arin-extended-latest > delegated-arin-extended-latest || rm -f delegated-arin-extended-latest
         wget -q -O - http://ftp.apnic.net/stats/ripe-ncc/delegated-ripencc-latest > delegated-ripencc-latest || rm -f delegated-ripencc-latest
         wget -q -O - http://ftp.apnic.net/stats/lacnic/delegated-lacnic-latest > delegated-lacnic-latest || rm -f delegated-lacnic-latest
         wget -q -O - http://ftp.apnic.net/stats/afrinic/delegated-afrinic-latest > delegated-afrinic-latest || rm -f delegated-afrinic-latest
-        perl makeiplist.pl -4 -C cctld.txt delegated-apnic-latest delegated-arin-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.txt || rm -f ip4.txt
-        perl makeiplist.pl -4 -c  -C cctld.txt delegated-apnic-latest delegated-arin-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.cidr.txt || rm -f ip4.cidr.txt
-        perl makeiplist.pl -6 -C cctld.txt delegated-apnic-latest delegated-arin-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.txt || rm -f ip6.txt
-        perl makeiplist.pl -6 -c  -C cctld.txt delegated-apnic-latest delegated-arin-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.cidr.txt || rm -f ip6.cidr.txt
+        /usr/local/bin/perl bin/makeiplist.pl -4 -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.txt || rm -f ip4.txt
+        /usr/local/bin/perl bin/makeiplist.pl -4 -c  -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip4.cidr.txt || rm -f ip4.cidr.txt
+        /usr/local/bin/perl bin/makeiplist.pl -6 -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.txt || rm -f ip6.txt
+        /usr/local/bin/perl bin/makeiplist.pl -6 -c  -C cctld.txt delegated-apnic-latest delegated-arin-extended-latest delegated-ripencc-latest delegated-lacnic-latest delegated-afrinic-latest > ip6.cidr.txt || rm -f ip6.cidr.txt
+        /usr/local/bin/perl bin/makebycountry.pl cc/ .ip4 ip4.cidr.txt
+        /usr/local/bin/perl bin/makebycountry.pl cc/ .ip6 ip6.cidr.txt
 
 2. confirm
 
@@ -57,7 +59,7 @@ INSTALL
         2001:252::/32	CN	China
         2001:254::/32	CN	China
 
-3. copy cctld to your $PATH
+3. copy bin/cctld to your $PATH
 
 4. copy cctld.ip4 and cctld.txt to LIBRARY-PATH
 
