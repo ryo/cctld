@@ -13,7 +13,7 @@ LACNIC_URL	= http://ftp.apnic.net/stats/lacnic/
 AFRINIC_URL	= http://ftp.apnic.net/stats/afrinic/
 
 # iana
-IANA_URL	= http://www.iana.org/domains/root/db/
+IANA_ROOTDB_URL	= http://www.iana.org/domains/root/db/
 
 APNIC		= delegated-apnic-latest
 ARIN		= delegated-arin-extended-latest
@@ -34,7 +34,7 @@ fetch: $(DELEGATEFILE)
 rebuild: clean-txt $(LIST)
 
 cctld.txt:
-	${HTTPGET} ${IANA_URL} | ${PERL} bin/makecctld.pl > $@ || rm -f $@
+	${HTTPGET} ${IANA_ROOTDB_URL} | ${PERL} bin/makecctld.pl > $@ || rm -f $@
 
 $(APNIC):
 	${HTTPGET} ${APNIC_URL}${APNIC} > $@ || rm -f $@
@@ -46,6 +46,8 @@ $(LACNIC):
 	${HTTPGET} ${LACNIC_URL}${LACNIC} > $@ || rm -f $@
 $(AFRINIC):
 	${HTTPGET} ${AFRINIC_URL}${AFRINIC} > $@ || rm -f $@
+$(IANA):
+	${HTTPGET} ${IANA_URL}${IANA} > $@ || rm -f $@
 
 ip4.txt: cctld.txt $(DELEGATEFILE)
 	${PERL} bin/makeiplist.pl -4 -C cctld.txt $(DELEGATEFILE) > $@ || rm -f $@
