@@ -11,6 +11,11 @@ use warnings;
 use strict;
 use Getopt::Std;
 use Data::Dumper;
+use Regexp::IPv6 qw($IPv6_re);
+
+# XXX: instead of Regexp::IPv4
+my $IPv4_re = qr/(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)/;
+
 
 sub usage {
 	die <<__USAGE__;
@@ -19,12 +24,26 @@ usage: cctld [options]
 
 	-l	long format
 	-d	extend format
+	-c	color
 __USAGE__
 }
 
+my $COLOR1_IN   = "\e[34m";
+my $COLOR1_OUT  = "\e[m";
+my $COLOR2_IN  = "\e[32m";
+my $COLOR2_OUT = "\e[m";
+my $COLOR3_IN  = "\e[31m";
+my $COLOR3_OUT = "\e[m";
 
 my %opts;
-getopts('dlx', \%opts) or usage();
+getopts('cdlx', \%opts) or usage();
+
+unless (exists $opts{c}) {
+	$COLOR1_IN = $COLOR1_OUT = '';
+	$COLOR2_IN = $COLOR2_OUT = '';
+	$COLOR3_IN = $COLOR3_OUT = '';
+}
+
 
 ($_ = $0) =~ s|/[^/]*$||;
 my @tablepath = (
@@ -34,59 +53,103 @@ my @tablepath = (
 );
 
 push(@tablepath, $ENV{CCTLDLIB}) if (exists $ENV{CCTLDLIB});
-my ($CCTLDLIB) = grep(-f "$_/ip4.txt", @tablepath);
-my @ip;
+my ($CCTLDLIB4) = grep(-f "$_/ip4.txt", @tablepath);
+my ($CCTLDLIB6) = grep(-f "$_/ip6.txt", @tablepath);
 
-my $file = "$CCTLDLIB/ip4.txt";
-open(my $fh, $file) or die "open: $file: $!\n";
-while (<$fh>) {
-	chop;
-	my ($start, $end, $cc, $country) = split(/\t/, $_, 4);
-	my $st = ip4_n($start);
-	my $ed = ip4_n($end);
-	push(@ip, [$st, $ed, $cc, $country]);
-}
-close($fh);
+my @ip4_table = readtable4("$CCTLDLIB4/ip4.txt");
+my @ip6_table = readtable6("$CCTLDLIB4/ip6.txt");
 
-
-my $RE_IP = qr/(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)\.(?:25[0-5]|2[0-4]\d|1\d\d|[1-9]\d|\d)/;
 
 $| = 1 if -t STDOUT;
 while (<>) {
-	if ($opts{e}) {
-		$_ = join("\n", m/($RE_IP)/g) . "\n";
-	}
-
-	s/($RE_IP)/ip2cc($1)/eg;
+	s/($IPv4_re)/ip4toCC($1)/eg;
+	s/($IPv6_re)/ip6toCC($1)/eg;
 	print;
 }
+exit;
 
-sub ip2cc {
+
+
+sub readtable4 {
+	my $file = shift;
+	my @addr;
+	open(my $fh, $file) or die "open: $file: $!\n";
+	while (<$fh>) {
+		chop;
+		my ($start, $end, $cc, $country) = split(/\t/, $_, 4);
+		my $st = ip4_n($start);
+		my $ed = ip4_n($end);
+		push(@addr, [$st, $ed, $cc, $country]);
+	}
+	close($fh);
+	return @addr;
+}
+
+sub readtable6 {
+	my $file = shift;
+	my @addr;
+	open(my $fh, $file) or die "open: $file: $!\n";
+	while (<$fh>) {
+		chop;
+		my ($start, $end, $cc, $country) = split(/\t/, $_, 4);
+		my $st = ip6_s64($start);
+		my $ed = ip6_s64($end);
+		push(@addr, [$st, $ed, $cc, $country]);
+	}
+	close($fh);
+	return @addr;
+}
+
+sub ip4toCC {
 	my $ip = shift;
 	my $i;
 	my $result;
 
 	my $n = ip4_n($ip);
-	$i = bsearch(0, $#ip, $n);
+	$i = bsearch_ip4(0, $#ip4_table, $n);
 
-	if ((${$ip[$i]}[0] <= $n) && ($n <= ${$ip[$i]}[1])) {
+	if ((${$ip4_table[$i]}[0] <= $n) && ($n <= ${$ip4_table[$i]}[1])) {
 		if ($opts{d}) {
-			$result = sprintf "%s(%s,%s)", $ip, ${$ip[$i]}[2], ${$ip[$i]}[3];
+			$result = sprintf "%s%s%s(%s%s,%s%s)", $COLOR2_IN, $ip, $COLOR2_OUT, $COLOR1_IN, ${$ip4_table[$i]}[2], ${$ip4_table[$i]}[3], $COLOR1_OUT;
 		} elsif ($opts{l}) {
-			$result = sprintf "%s(%s)", $ip, ${$ip[$i]}[3];
+			$result = sprintf "%s%s%s(%s%s%s)", $COLOR2_IN, $ip, $COLOR2_OUT, $COLOR1_IN, ${$ip4_table[$i]}[3], $COLOR1_OUT;
 		} else {
-			$result = sprintf "%s(%s)", $ip, ${$ip[$i]}[2];
+			$result = sprintf "%s%s%s(%s%s%s)", $COLOR2_IN, $ip, $COLOR2_OUT, $COLOR1_IN, ${$ip4_table[$i]}[2], $COLOR1_OUT;
 		}
 
 	} else {
-		$result = $ip;
+		$result = sprintf "%s%s%s", $COLOR2_IN, $ip, $COLOR2_OUT;
+	}
+
+	$result;
+}
+
+sub ip6toCC {
+	my $ip6 = shift;
+	my $i;
+	my $result;
+
+	my $s64 = ip6_s64($ip6);
+
+	$i = bsearch_ip6(0, $#ip6_table, $s64);
+	if (($s64 cmp ${$ip6_table[$i]}[0]) > 0 && (${$ip6_table[$i]}[1] cmp $s64) > 0) {
+		if ($opts{d}) {
+			$result = sprintf "%s%s%s(%s%s,%s%s)", $COLOR3_IN, $ip6, $COLOR3_OUT, $COLOR1_IN, ${$ip6_table[$i]}[2], ${$ip6_table[$i]}[3], $COLOR1_OUT;
+		} elsif ($opts{l}) {
+			$result = sprintf "%s%s%s(%s%s%s)", $COLOR3_IN, $ip6, $COLOR3_OUT, $COLOR1_IN, ${$ip6_table[$i]}[3], $COLOR1_OUT;
+		} else {
+			$result = sprintf "%s%s%s(%s%s%s)", $COLOR3_IN, $ip6, $COLOR3_OUT, $COLOR1_IN, ${$ip6_table[$i]}[2], $COLOR1_OUT;
+		}
+
+	} else {
+		$result = sprintf "%s%s%s", $COLOR3_IN, $ip6, $COLOR3_OUT;
 	}
 
 	$result;
 }
 
 
-sub bsearch {
+sub bsearch_ip4 {
 	my ($st, $ed, $ip) = @_;
 	my $av = int(($st + $ed) / 2);
 
@@ -94,10 +157,25 @@ sub bsearch {
 		return $st;
 	}
 
-	if ($ip < ${$ip[$av]}[0]) {
-		return bsearch($st, $av, $ip);
+	if ($ip < ${$ip4_table[$av]}[0]) {
+		return bsearch_ip4($st, $av, $ip);
 	} else {
-		return bsearch($av, $ed, $ip);
+		return bsearch_ip4($av, $ed, $ip);
+	}
+}
+
+sub bsearch_ip6 {
+	my ($st, $ed, $ip6) = @_;
+	my $av = int(($st + $ed) / 2);
+
+	if (($ed - $st) <= 1) {
+		return $st;
+	}
+
+	if (($ip6 cmp ${$ip6_table[$av]}[0]) < 0) {
+		return bsearch_ip6($st, $av, $ip6);
+	} else {
+		return bsearch_ip6($av, $ed, $ip6);
 	}
 }
 
@@ -110,3 +188,31 @@ sub n_ip4 {
 	my $n = shift;
 	sprintf("%d.%d.%d.%d", unpack("CCCC", pack("N", $n)));
 }
+
+# return 64bit prefix of an ipv6 address
+sub ip6_s64 {
+	my $ip6 = shift;
+	my $ip6_s = expand_ip6($ip6);
+	substr($ip6_s, 0, 4+1 + 4+1 + 4+1 + 4);
+}
+
+#
+# - convert ip6 addr to sortable string
+#
+# e.g.) expand_ip6("3ffe:507:108::1")
+#	-> "3ffe:0507:0108:0000:0000:0000:0000:0001"
+#
+sub expand_ip6 {
+	my $ip = shift;
+
+	$ip =~ s/:://;
+	my @a16 = split(/:/, $ip);
+	$ip =~ s//":" x (7 - $#a16)/e;
+	$ip =~ s/:$/:0/;
+	@a16 = split(/:/, $ip);
+
+	map { $_ = sprintf("%04x", hex($_) + 0) } @a16;
+
+	join(":", @a16);
+}
+
