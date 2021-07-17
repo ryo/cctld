@@ -1,25 +1,26 @@
 SUMMARY
 =======
-CCTLD - cctld tools is creating IP addresses table with Country Code
+CCTLD - cctld tools is creating IP addresses table TSV-files with Country Code
 
-####bin/makecctld.pl
+`bin/makecctld.pl`
 create Country Code list from iana.org.
 
-####bin/makeiplist.pl
+`bin/makeiplist.pl`
 create IP addresses table with country code from *nic delegate files.
 
-####bin/makebycountry.pl
+`bin/makebycountry.pl`
 create IP addresses table by country code.
 
-####bin/cctld
+`bin/cctld`
 reads stdin and replace IP addresses with country code.
 
 
 INSTALL
 =======
-0. install Perl module 'NET::Cidr'
+0. install Perl module 'NET::Cidr' and 'Regexp::IPv6'
 
         % perl -MCPAN -e 'install Net::CIDR'
+        % perl -MCPAN -e 'install Regexp::IPv6'
 
 1. make
 
@@ -69,12 +70,12 @@ INSTALL
 
         /usr/local/lib  or
         ~/lib           or
-        CCTLDLIB environment variable
+        $CCTLDLIB environment variable
 
         e.g.) cp cctld.ip4 /usr/local/lib
 
 
-HOW TO USE
+USAGE
 ----------
 	% echo 219.94.233.133 | cctld
 	219.94.233.133(JP)
@@ -87,9 +88,9 @@ HOW TO USE
 
 Reference
 ---------
-	http://www.iana.org/domains/root/db/
-	http://www.apnic.net/
-	http://www.arin.net/
-	http://www.ripe.net/
-	http://lacnic.net/
-	http://afrinic.net/
+- http://www.iana.org/domains/root/db/
+- http://www.apnic.net/ (http://ftp.apnic.net/stats/apnic/)
+- http://www.arin.net/ (http://ftp.arin.net/pub/stats/arin/)
+- http://www.ripe.net/ (http://ftp.ripe.net/ripe/stats/)
+- http://lacnic.net/ (http://ftp.lacnic.net/pub/stats/lacnic/)
+- http://afrinic.net/ (http://ftp.afrinic.net/pub/stats/afrinic/)
